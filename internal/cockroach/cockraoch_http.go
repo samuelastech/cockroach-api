@@ -3,19 +3,20 @@ package cockroach
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/samulastech/cockroach/internal/entities"
-	"github.com/samulastech/cockroach/pkg/common"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/samulastech/cockroach/internal/entities"
+	"github.com/samulastech/cockroach/pkg/common"
 )
 
 type CockroachHTTPHandler struct {
-	cockroachUsecaseCreate *CockroachUsecaseCreate
+	cockroachUsecaseCreate Create
 	log                    *log.Logger
 }
 
-func NewCockroachHTTPHandler(cockroachUsecaseCreate *CockroachUsecaseCreate) *CockroachHTTPHandler {
+func NewCockroachHTTPHandler(cockroachUsecaseCreate Create) *CockroachHTTPHandler {
 	return &CockroachHTTPHandler{
 		cockroachUsecaseCreate: cockroachUsecaseCreate,
 		log:                    log.New(os.Stdout, "[cockroach-httphandler] ", log.LstdFlags),
@@ -25,7 +26,7 @@ func NewCockroachHTTPHandler(cockroachUsecaseCreate *CockroachUsecaseCreate) *Co
 func (h *CockroachHTTPHandler) CreateCockroach(w http.ResponseWriter, r *http.Request) {
 	var dto entities.CreateCockroachDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		h.log.Println(fmt.Sprintf("[err: %s]", err.Error()))
+		h.log.Println(fmt.Sprintf("[message: error while trying to parse the body][err: %s]", err.Error()))
 		common.SendJSON(w, http.StatusBadRequest, common.Response{
 			Message: "invalid body",
 			Data:    nil,
@@ -34,7 +35,7 @@ func (h *CockroachHTTPHandler) CreateCockroach(w http.ResponseWriter, r *http.Re
 	}
 
 	if err := h.cockroachUsecaseCreate.DataProcessing(&dto); err != nil {
-		h.log.Println(fmt.Sprintf("[err: %s]", err.Error()))
+		h.log.Println(fmt.Sprintf("[message: unknow error was thrown][err: %s]", err.Error()))
 		common.SendJSON(w, http.StatusInternalServerError, common.Response{
 			Message: "internal server error",
 			Data:    nil,
